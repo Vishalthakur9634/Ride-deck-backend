@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
 
 const generateToken = (id) => {
@@ -64,15 +65,25 @@ router.post(
 
       await user.save();
 
+      const token = generateToken(user._id);
+
       res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
-        token: generateToken(user._id),
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          phone: user.phone,
+          role: user.role,
+        },
       });
     } catch (error) {
-      res.status(500).json({ message: 'Server Error' });
+      console.error('❌ REGISTER ERROR:', error.message);
+      console.error('Stack:', error.stack);
+      console.error('MongoDB State:', mongoose.connection.readyState); // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+      res.status(500).json({
+        message: 'Server error during registration',
+        error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
+      });
     }
   }
 );
