@@ -175,18 +175,20 @@ async function watchDrivers() {
 }
 
 async function start() {
-    console.log('🔌 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ MongoDB Connected');
+    try {
+        await mongoose.connect(process.env.MONGO_URI, {
+            serverSelectionTimeoutMS: 5000
+        });
+        console.log('✅ Bot MongoDB Connected');
+    } catch (err) {
+        // Silently retry
+        setTimeout(start, 10000);
+        return;
+    }
 
     await login();
     await setupRider();
     await setupDriver();
-
-    console.log('='.repeat(50));
-    console.log('🤖 BOT SIMULATOR IS NOW ACTIVE');
-    console.log('='.repeat(50));
-
     await watchRides();
     await watchDrivers();
 }
