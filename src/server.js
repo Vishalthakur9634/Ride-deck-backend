@@ -10,7 +10,10 @@ const path = require('path');
 const connectDB = require('./config/db');
 const User = require('./models/User');
 
-dotenv.config();
+// Only load .env file in development (Render provides env vars natively)
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 const app = express();
 const server = http.createServer(app);
